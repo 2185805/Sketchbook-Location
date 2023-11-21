@@ -1,0 +1,199 @@
+// Pong Spel Eindgame
+// Hulpmiddelen gebruikt, Youtube, ProcessingReference, ChatGPT, W3sSchools.
+
+SpelerBalk rechts = new SpelerBalk(75, 350, 100, 25);
+SpelerBalk links = new SpelerBalk(925, 350, 100, 25);
+Balletje Balletje = new Balletje(500, 350, 40, 40); // Aanroepen van de balkjes en balletjes.
+
+int[] playerScores = {0, 0};  // Array voor de spelerscore
+int winningScore = 3;   // Hoeveel punten je nodig hebt om te winnen
+
+boolean wKey, sKey, uKey, dKey; // Boolean voor de keybinds
+boolean WINNAAR = false; // Boolean om te checken of winnaar true/false is
+int WINNAARTEXTTIJD = 0; 
+int WINNAARTEXTTIJDLENGTE = 3000;  // Hoeveel millisceconde de winnaars text moet blijven
+
+void setup() { 
+  size(1000, 700);  // Grootte van het plaatje
+  for (int i = 0; i < 5; i++) { // Wist niet wat ik moest doen voor een for loop dus dn maar lekker printen
+  println("wow pong spel");
+ }
+}
+
+
+void draw() { // Runt altijd
+  background(0);
+
+  links.beeld(); // Aanroepen van alle functies
+  rechts.beeld();
+
+  Balletje.beeld();
+  Balletje.BallBeweging();
+
+  rechts.BewegenWS();
+  links.BewegenPijltjes();
+
+  textSize(20); // De texten voor de scores en hun x/y coordinaten.
+  fill(255);
+  text("Speler 1 Score: " + playerScores[0], width * 0.1, 40);
+  text("Speler 2 Score: " + playerScores[1], width * 0.7, 40);
+
+  if (playerScores[0] >= winningScore || playerScores[1] >= winningScore) { // Als playerscore 1,2 is winningscore of hoger, winnaar word true!
+    WINNAAR = true;
+    WINNAARTEXTTIJD = millis(); 
+
+    playerScores[0] = 0; // Resetten van de scores
+    playerScores[1] = 0;
+  }
+
+  if (WINNAAR) { // Als winnaar true, dan text speler1/2 heeft gewonnen.
+    fill(255);
+    textSize(48);
+    textAlign(CENTER, CENTER);
+    text("Speler " + (playerScores[0] >= winningScore ? "1" : "2") + " heeft gewonnen!", width / 2, height / 2);
+
+    if (millis() - WINNAARTEXTTIJD >= WINNAARTEXTTIJDLENGTE) {
+      WINNAAR = false;
+    }
+
+    textAlign(LEFT); 
+  }
+}
+
+void keyPressed() { // Een void voor de KeyPressed ( Toets Ingedrukt )
+  if (key == 'w' || key == 'W') {
+    wKey = true;
+  }
+  if (key == 's' || key == 'S') {
+    sKey = true;
+  }
+  if (keyCode == UP) {
+    uKey = true;
+  }
+  if (keyCode == DOWN) {
+    dKey = true;
+  }
+}
+
+void keyReleased() { // Een void voor wanneer de toets word losgelaten
+  if (key == 'w' || key == 'W') {
+    wKey = false;
+  }
+  if (key == 's' || key == 'S') {
+    sKey = false;
+  }
+  if (keyCode == UP) {
+    uKey = false;
+  }
+  if (keyCode == DOWN) {
+    dKey = false;
+  }
+}
+
+class Balletje { // Class voor het balletje met een begin posititie, positie, de breedte en hoogte, Snelheid
+  int x, y;
+  int XX, YY;
+  int BalBreedte;
+  int BalHoogte;
+  int velocityO = 5;
+  int velocityH = 5;
+
+  void resetBall() { // Void voor het resetten van de de bal die de ball weer terug naar het midden brengt.
+    x = width / 2;
+    y = height / 2;
+  }
+
+  Balletje(int XX, int YY, int BalBreedte, int BalHoogte) { // This zorgt voor minder verwarring, omdat er veel coordinaten worden gebruikt in mijn code.
+    this.XX = XX;
+    this.YY = YY;
+    this.BalBreedte = BalBreedte;
+    this.BalHoogte = BalHoogte;
+    x = XX;
+    y = YY;
+  }
+
+  void beeld() {   // Beeld voor het balletje, ( kleur, waar )
+    fill(255);
+    ellipseMode(CENTER);
+    ellipse(x, y, BalBreedte, BalHoogte);
+  }
+
+  void BallBeweging() { // Functie voor de beweging van de ball
+    x += velocityO; // Update constant de positie van de ball
+    y += velocityH;
+
+    if (x > width - BalBreedte) { // Checken of de bal de bovenste rand, of bijvoorbeeld onderste aanraakt en daarna terug lancere :D
+    velocityO *= -1;
+    }
+    if (x < BalBreedte) {
+      velocityO *= -1;
+    }
+    if (y > height - BalHoogte) {
+      velocityH *= -1;
+    }
+    if (y < BalHoogte) {
+      velocityH *= -1;
+    }
+
+    if (x + BalBreedte / 2 > rechts.x - rechts.BalkBreedte / 2 && // Hier kijken we of de bal een spelerbalk aan raakt en als dat zo is terug lancere
+        x - BalBreedte / 2 < rechts.x + rechts.BalkBreedte / 2 &&
+        y + BalHoogte / 2 > rechts.y - rechts.BalkHoogte / 2 &&
+        y - BalHoogte / 2 < rechts.y + rechts.BalkHoogte / 2) {
+      velocityO *= -1;
+    }
+
+    if (x + BalBreedte / 2 > links.x - links.BalkBreedte / 2 && // Linker balkie met het zelfde.
+        x - BalBreedte / 2 < links.x + links.BalkBreedte / 2 &&
+        y + BalHoogte / 2 > links.y - links.BalkHoogte / 2 &&
+        y - BalHoogte / 2 < links.y + links.BalkHoogte / 2) {
+      velocityO *= -1;
+    }
+
+    if (x > width - BalBreedte) { // Hier kijken we of de bal achter een spelersbalk komt, dan krijgt de spelerscore array een punt.
+      resetBall();
+      playerScores[0]++;
+    } else if (x < BalBreedte) {
+      resetBall();
+      playerScores[1]++;
+    }
+  }
+}
+
+class SpelerBalk { // Class voor de spelerbalk, ( variables, data, functies )
+  int x;
+  int y;
+  int BalkHoogte;
+  int BalkBreedte;
+  int Snelheid = 4;
+
+  SpelerBalk(int x, int y, int BalkHoogte, int BalkBreedte) { // weer met this defineren.
+    this.x = x;
+    this.y = y;
+    this.BalkHoogte = BalkHoogte;
+    this.BalkBreedte = BalkBreedte;
+  }
+
+  void beeld() { // Hetzelfde, kleur, waar, wat soort vorm 
+    fill(255);
+    rectMode(CENTER);
+    rect(x, y, BalkBreedte, BalkHoogte);
+  }
+
+  void BewegenWS() { // Functie voor het bewegen van balkjes met WS, die checkt ook gelijk of de spelersbalk niet uit het plaatje gaat.
+    if (wKey && y - BalkHoogte / 2 > 0) {
+      y -= Snelheid;
+    }
+    if (sKey && y + BalkHoogte / 2 < height) {
+      y += Snelheid;
+    }
+  }
+
+  void BewegenPijltjes() { // Zelfde maar dan voor de andere player die met pijltjes speelt.
+    if (uKey && y - BalkHoogte / 2 > 0) {
+      y -= Snelheid;
+    }
+    if (dKey && y + BalkHoogte / 2 < height) {
+      y += Snelheid;
+    }
+  }
+}
